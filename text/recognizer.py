@@ -1,29 +1,30 @@
-import speech_recognition as sr
-import subprocess
+import whisper
 from utils.logger import logger
+
+# Add version check and logging
+logger.info(f"Using Whisper version: {whisper.__version__}")
 
 
 class TextRecognizer:
-    @staticmethod
-    def audio_to_text(audio_file):
-        recognizer = sr.Recognizer()
+    _model = None
 
-        # Use system FLAC instead of the bundled one
-        flac_converter = subprocess.check_output(["which", "flac"]).decode().strip()
-        recognizer.converter = flac_converter
+    @classmethod
+    def get_model(cls):
+        if cls._model is None:
+            # Load the model only once and cache it
+            # Options: tiny, base, small, medium, large
+            cls._model = whisper.load_model("medium")
+        return cls._model
 
+    @classmethod
+    def audio_to_text(cls, audio_file):
         try:
-            with sr.AudioFile(audio_file) as source:
-                audio = recognizer.record(source)
-                text = recognizer.recognize_google(audio)
-                logger.info(f"Audio to text: {text}")
-                return text
-        except sr.UnknownValueError:
-            logger.error("Could not understand audio")
-            return "Could not understand audio"
-        except sr.RequestError as e:
-            logger.error(f"Could not request results: {str(e)}")
-            return f"Could not request results; {str(e)}"
+            model = cls.get_model()
+            result = model.transcribe(audio_file)
+            text = result["text"]
+            logger.info(f"Audio to text: {text}")
+            return text
         except Exception as e:
-            logger.error(f"Error processing audio: {str(e)}")
-            return f"Error processing audio: {str(e)}"
+            error_msg = f"Error processing audio: {str(e)}"
+            logger.error(error_msg)
+            return error_msg

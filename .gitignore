@@ -6,6 +6,7 @@
 /data/*
 /temp
 *.m4a
+/logs
 
 ### macOS ###
 # General

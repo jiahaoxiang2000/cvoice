@@ -4,6 +4,7 @@
 
 /data
 /data/*
+/temp
 
 ### macOS ###
 # General

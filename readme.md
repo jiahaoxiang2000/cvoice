@@ -2,6 +2,18 @@
 
 Cvoice is one tools for voice recognition and synthesis. which can change one pice of video audio from one person to another person.
 
+## Requirements
+
+- Python 3.8+
+- FFmpeg
+- Required Python packages:
+  - moviepy
+  - speech_recognition
+  - pyttsx3
+  - transformers
+
+## Installation
+
 ## How it works?
 
 - First, we need to split the audio from the video.

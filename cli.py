@@ -20,9 +20,12 @@ def audio_to_text(args):
 
 
 def improve_text(args):
-    logger.info("Improving text")
-    improved = TextImprover.improve_text(args.input)
-    print(f"Improved text: {improved}")
+    logger.info(f"Improving text from {args.input}")
+    improver = TextImprover()
+    if improver.improve_text(args.input, args.output):
+        logger.info(f"Improved text saved to: {args.output}")
+    else:
+        logger.error("Failed to improve text")
 
 
 def text_to_audio(args):
@@ -40,11 +43,16 @@ def merge_audio(args):
 def full_pipeline(args):
     logger.info(f"Running full pipeline from {args.input} to {args.output}")
     audio_file = AudioExtractor.extract_audio(args.input)
-    text = TextRecognizer.audio_to_text(audio_file)
-    improved_text = TextImprover.improve_text(text)
-    new_audio = AudioSynthesizer.text_to_audio(improved_text)
-    AudioMerger.merge_audio_video(args.input, new_audio, args.output)
-    logger.info(f"Pipeline complete. Output saved as {args.output}")
+    srt_file = TextRecognizer.audio_to_text(audio_file, output_format="srt")
+    
+    improver = TextImprover()
+    improved_srt = f"{srt_file}.improved.srt"
+    if improver.improve_text(srt_file, improved_srt):
+        new_audio = AudioSynthesizer.text_to_audio(improved_srt)
+        AudioMerger.merge_audio_video(args.input, new_audio, args.output)
+        logger.info(f"Pipeline complete. Output saved as {args.output}")
+    else:
+        logger.error("Pipeline failed at text improvement stage")
 
 
 def main():
@@ -75,14 +83,23 @@ def main():
         "-i", "--input", required=True, help="Path to input audio file (wav format)"
     )
 
-    # Improve text command
+    # Update Improve text command
     improve_parser = subparsers.add_parser(
         "improve",
         aliases=["i"],
         help="Improve text quality using AI",
-        description="Enhance the text quality using BART language model",
+        description="Enhance the text quality using DeepSeek AI model",
     )
-    improve_parser.add_argument("-i", "--input", required=True, help="Text to improve")
+    improve_parser.add_argument(
+        "-i", "--input", 
+        required=True, 
+        help="Path to input SRT file"
+    )
+    improve_parser.add_argument(
+        "-o", "--output",
+        required=True,
+        help="Path for output improved SRT file"
+    )
 
     # Text to audio command
     text2audio_parser = subparsers.add_parser(

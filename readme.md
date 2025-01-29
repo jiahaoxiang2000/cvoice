@@ -11,9 +11,17 @@ Cvoice is one tools for voice recognition and synthesis. which can change one pi
 
 - [x] use the log system to replace the print
 - [ ] use the online model to replace the offline model
-  - [ ] use the deepseek r1 model to optimize the srt file is accuracy.
+  - [ ] use the deepseek r1 model to optimize the srt file is **accuracy**.
 - [x] let the cli and args can do one small function, like the text to audio, audio to text, and so on.
 - [ ] optimize the running logic, let the result video can be more accurate.
+
+## Usage
+
+the voice recognition example, which default output the .srt file on the `data` folder.
+
+```shell
+python cli.py transcribe --input data/extracted_audio.wav
+```
 
 ## How it works?
 

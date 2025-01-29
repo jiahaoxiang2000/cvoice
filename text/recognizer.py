@@ -38,8 +38,7 @@ class TextRecognizer:
 
         elif format == "srt":
             with open(output_path, "w", encoding="utf-8") as f:
-                for i, seg in enumerate(result["segments"], 1):
-                    f.write(f"{i}\n")
+                for _, seg in enumerate(result["segments"], 1):
                     start = datetime.utcfromtimestamp(seg["start"]).strftime(
                         "%H:%M:%S,%f"
                     )[:-3]

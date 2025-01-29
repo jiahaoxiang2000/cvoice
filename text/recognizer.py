@@ -60,10 +60,7 @@ class TextRecognizer:
 
             # Create output filename
             base_name = os.path.splitext(os.path.basename(audio_file))[0]
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = os.path.join(
-                output_dir, f"{base_name}_{timestamp}.{output_format}"
-            )
+            output_path = os.path.join(output_dir, f"{base_name}.{output_format}")
 
             # Save to file
             cls._save_to_file(result, output_path, output_format)

@@ -1,5 +1,6 @@
 import re
 import os
+import json
 from openai import OpenAI
 from utils.logger import logger
 
@@ -71,21 +72,30 @@ class TextImprover:
             messages = [
                 {
                     "role": "system",
-                    "content": "Improve each subtitle section separated by '---'. "
-                    "Keep the same number of sections and maintain similar length for each. "
-                    "Make them clear and natural while preserving meaning.",
+                    "content": (
+                        "Convert each subtitle section separated by '---' into improved text. "
+                        "Output should be in JSON format with an array of improved texts. "
+                        "Make them clear and natural while preserving meaning.\n\n"
+                        "EXAMPLE INPUT:\nText1\n---\nText2\n\n"
+                        "EXAMPLE JSON OUTPUT:\n"
+                        '{"improved_texts": ["Improved Text1", "Improved Text2"]}'
+                    ),
                 },
                 {"role": "user", "content": combined_text},
             ]
 
             logger.debug("Sending request to DeepSeek API")
-            logger.debug(f"Request content: {messages}")
             response = self.client.chat.completions.create(
-                model="deepseek-reasoner", messages=messages
+                model="deepseek-reasoner",
+                messages=messages,
+                response_format={"type": "json_object"}
             )
             logger.debug(f"Received response from DeepSeek API: {response}")
 
-            improved_texts = response.choices[0].message.content.split("\n---\n")
+            # Parse JSON response
+            content = json.loads(response.choices[0].message.content)
+            improved_texts = content.get("improved_texts", [])
+
             logger.debug(f"Split response into {len(improved_texts)} segments")
 
             if len(improved_texts) != len(batch):

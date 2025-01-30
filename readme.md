@@ -7,11 +7,15 @@ Cvoice is one tools for voice recognition and synthesis. which can change one pi
 - ffmpeg
 - pip install -r requirements.txt
 
+## Issues
+
+- the deepseek platform api website is closed, so we stop the model development. time : 2025-01-30.  
+
 ## TODO
 
 - [x] use the log system to replace the print
 - [ ] use the online model to replace the offline model
-  - [ ] use the deepseek r1 model to optimize the srt file is **accuracy**.
+  - [x] use the deepseek r1 model to optimize the srt file is **accuracy**.
 - [x] let the cli and args can do one small function, like the text to audio, audio to text, and so on.
 - [ ] optimize the running logic, let the result video can be more accurate.
 

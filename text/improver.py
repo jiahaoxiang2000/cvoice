@@ -97,9 +97,13 @@ class TextImprover:
             content = json.loads(response.choices[0].message.content)
             improved_texts = content.get("improved_texts", [])
 
+            logger.debug(f"improved texts: {improved_texts}")
+
             # Strict validation of output count
             if len(improved_texts) != len(batch):
-                logger.error(f"API returned wrong number of segments: {len(improved_texts)} instead of {len(batch)}")
+                logger.error(
+                    f"API returned wrong number of segments: {len(improved_texts)} instead of {len(batch)}"
+                )
                 # Fall back to original texts if counts don't match
                 improved_texts = [seg["text"] for seg in batch]
 

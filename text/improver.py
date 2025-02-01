@@ -9,11 +9,14 @@ class TextImprover:
     MAX_TOKENS = 2048  # DeepSeek reasoner token limit
 
     def __init__(self):
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        api_key = os.getenv("DASHSCOPE_API_KEY")
         if not api_key:
-            raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
+            raise ValueError("DASHSCOPE_API_KEY environment variable is not set")
 
-        self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        )
         logger.info("DeepSeek client initialized")
         logger.debug(f"Using DeepSeek API URL: {self.client.base_url}")
 
@@ -86,9 +89,9 @@ class TextImprover:
 
             logger.debug("Sending request to DeepSeek API")
             response = self.client.chat.completions.create(
-                model="deepseek-reasoner",
+                model="qwen-max",
                 messages=messages,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
             logger.debug(f"Received response from DeepSeek API: {response}")
 

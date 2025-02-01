@@ -89,15 +89,14 @@ class TextImprover:
             ]
 
             response = self.client.chat.completions.create(
-                model="qwen-max",
+                model="deepseek-r1",
                 messages=messages,
-                response_format={"type": "json_object"},
             )
 
             content = json.loads(response.choices[0].message.content)
-            improved_texts = content.get("improved_texts", [])
+            logger.debug(f"improved texts: {content}")
 
-            logger.debug(f"improved texts: {improved_texts}")
+            improved_texts = content.get("improved_texts", [])
 
             # Strict validation of output count
             if len(improved_texts) != len(batch):

@@ -76,45 +76,39 @@ class TextImprover:
                 {
                     "role": "system",
                     "content": (
-                        "Convert each subtitle section separated by '---' into improved text. "
+                        f"Convert exactly {len(batch)} subtitle sections separated by '---' into improved text. "
+                        "Output must contain exactly the same number of sections as input. "
                         "Output should be in JSON format with an array of improved texts. "
                         "Make them clear and natural while preserving meaning.\n\n"
                         "EXAMPLE INPUT:\nText1\n---\nText2\n\n"
-                        "EXAMPLE JSON OUTPUT:\n"
-                        '{"improved_texts": ["Improved Text1", "Improved Text2"]}'
+                        '{"improved_texts": ["Improved Text1", "Improved Text2"]}\n\n'
+                        f"YOUR OUTPUT MUST CONTAIN EXACTLY {len(batch)} IMPROVED TEXTS."
                     ),
                 },
                 {"role": "user", "content": combined_text},
             ]
 
-            logger.debug("Sending request to DeepSeek API")
             response = self.client.chat.completions.create(
                 model="qwen-max",
                 messages=messages,
                 response_format={"type": "json_object"},
             )
-            logger.debug(f"Received response from DeepSeek API: {response}")
 
-            # Parse JSON response
             content = json.loads(response.choices[0].message.content)
             improved_texts = content.get("improved_texts", [])
 
-            logger.debug(f"Split response into {len(improved_texts)} segments")
-
+            # Strict validation of output count
             if len(improved_texts) != len(batch):
-                logger.error(
-                    f"Mismatch in segment count: expected {len(batch)}, got {len(improved_texts)}"
-                )
+                logger.error(f"API returned wrong number of segments: {len(improved_texts)} instead of {len(batch)}")
+                # Fall back to original texts if counts don't match
+                improved_texts = [seg["text"] for seg in batch]
 
             return improved_texts
 
         except Exception as e:
             logger.error(f"Error in _improve_batch: {str(e)}")
-            logger.error(f"Batch content: {combined_text}")
-            logger.error(
-                f"API Response: {response if 'response' in locals() else 'No response'}"
-            )
-            raise
+            # Fall back to original texts on error
+            return [seg["text"] for seg in batch]
 
     def improve_text(self, input_path, output_path):
         logger.info(f"Starting improvement of {input_path}")

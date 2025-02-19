@@ -1,5 +1,5 @@
 from moviepy import VideoFileClip
-from utils.file_handler import FileHandler
+from ..utils.file_handler import FileHandler
 
 
 class AudioExtractor:

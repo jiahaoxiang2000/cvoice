@@ -2,7 +2,7 @@ import re
 import os
 import json
 from openai import OpenAI
-from utils.logger import logger
+from ..utils.logger import logger
 
 
 class TextImprover:

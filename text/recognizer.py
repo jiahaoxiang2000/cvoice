@@ -2,7 +2,7 @@ import whisper
 import json
 import os
 from datetime import datetime
-from utils.logger import logger
+from ..utils.logger import logger
 
 # Add version check and logging
 logger.info(f"Using Whisper version: {whisper.__version__}")

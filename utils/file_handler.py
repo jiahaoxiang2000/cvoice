@@ -1,13 +1,16 @@
 import os
-
+import tempfile
 
 class FileHandler:
-    @staticmethod
-    def ensure_temp_dir():
-        temp_dir = "data"
-        os.makedirs(temp_dir, exist_ok=True)
-        return temp_dir
+    TEMP_DIR = None
 
-    @staticmethod
-    def get_temp_path(filename):
-        return os.path.join("data", filename)
+    @classmethod
+    def ensure_temp_dir(cls):
+        if not cls.TEMP_DIR:
+            cls.TEMP_DIR = tempfile.mkdtemp()
+        return cls.TEMP_DIR
+
+    @classmethod
+    def get_temp_path(cls, filename):
+        temp_dir = cls.ensure_temp_dir()
+        return os.path.join(temp_dir, filename)

@@ -1,7 +1,7 @@
 import whisper
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from ..utils.logger import logger
 
 # Add version check and logging
@@ -16,7 +16,7 @@ class TextRecognizer:
         if cls._model is None:
             # Load the model only once and cache it
             # Options: tiny, base, small, medium, large
-            cls._model = whisper.load_model("medium")
+            cls._model = whisper.load_model("turbo")
         return cls._model
 
     @staticmethod
@@ -39,12 +39,10 @@ class TextRecognizer:
         elif format == "srt":
             with open(output_path, "w", encoding="utf-8") as f:
                 for _, seg in enumerate(result["segments"], 1):
-                    start = datetime.utcfromtimestamp(seg["start"]).strftime(
-                        "%H:%M:%S,%f"
-                    )[:-3]
-                    end = datetime.utcfromtimestamp(seg["end"]).strftime("%H:%M:%S,%f")[
-                        :-3
-                    ]
+                    start = datetime.fromtimestamp(seg["start"], tz=timezone.utc).strftime(
+                        "%H:%M:%S"
+                    )
+                    end = datetime.fromtimestamp(seg["end"], tz=timezone.utc).strftime("%H:%M:%S")
                     f.write(f"{start} --> {end}\n")
                     f.write(f"{seg['text'].strip()}\n\n")
 

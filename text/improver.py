@@ -23,7 +23,7 @@ class TextImprover:
     def _parse_srt(self, srt_content):
         logger.debug(f"Parsing SRT content of length: {len(srt_content)}")
         segments = []
-        pattern = r"(\d+:\d+:\d+,\d+) --> (\d+:\d+:\d+,\d+)\n(.*?)\n\n"
+        pattern = r"(\d+:\d+:\d+) --> (\d+:\d+:\d+)\n(.*?)\n\n"
         matches = re.finditer(pattern, srt_content + "\n\n", re.DOTALL)
 
         try:
@@ -74,7 +74,7 @@ class TextImprover:
 
             messages = [
                 {
-                    "role": "system",
+                    "role": "user",
                     "content": (
                         f"Convert exactly {len(batch)} subtitle sections separated by '---' into improved text. "
                         "Output must contain exactly the same number of sections as input. "
@@ -90,10 +90,11 @@ class TextImprover:
 
             response = self.client.chat.completions.create(
                 model="deepseek-r1",
-                messages=messages,
+                messages=messages, # type: ignore
             )
 
-            content = json.loads(response.choices[0].message.content)
+            logger.debug(f"API response: {response.choices[0].message.content}")
+            content = json.loads(response.choices[0].message.content) # type: ignore
             logger.debug(f"improved texts: {content}")
 
             improved_texts = content.get("improved_texts", [])

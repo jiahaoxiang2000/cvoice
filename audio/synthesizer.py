@@ -1,38 +1,27 @@
-import subprocess
+from TTS.api import TTS
+from TTS.utils.synthesizer import Synthesizer
+import torch
 from ..utils.file_handler import FileHandler
 
 
 class AudioSynthesizer:
-    @staticmethod
-    def text_to_audio(text):
-        FileHandler.ensure_temp_dir()
-        temp_audio = FileHandler.get_temp_path("new_audio.wav")
-        aiff_audio = FileHandler.get_temp_path("temp.aiff")
+    def __init__(self):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        # Initialize XTTS v2 model
+        self.tts = TTS(
+            model_name="tts_models/multilingual/multi-dataset/xtts_v2"
+        ).to(device)
+
+    def text_to_audio(self, text, output_path=None):
+        if output_path is None:
+            FileHandler.ensure_temp_dir()
+            output_path = FileHandler.get_temp_path("new_audio.wav")
+        
         try:
-            # First create AIFF file (macOS say command native format)
-            subprocess.run(
-                ["say", "-v", "Alex", "-o", aiff_audio, text],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-
-            # Convert AIFF to WAV using afconvert
-            subprocess.run(
-                ["afconvert", "-f", "WAVE", "-d", "LEI16", aiff_audio, temp_audio],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-
-            # Clean up temporary AIFF file
-            subprocess.run(["rm", aiff_audio], check=True)
+            # Synthesize audio from text
+            self.tts.tts_to_file(text, output_path)
+            return output_path
             
-            return temp_audio
-
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr if e.stderr else str(e)
-            raise RuntimeError(f"Text-to-speech conversion failed: {error_msg}")
         except Exception as e:
-            raise RuntimeError(f"Unexpected error during text-to-speech: {str(e)}")
+            raise RuntimeError(f"Text-to-speech conversion failed: {str(e)}")

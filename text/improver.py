@@ -90,6 +90,9 @@ class TextImprover:
                 model="deepseek-r1",
                 messages=messages, # type: ignore
                 stream=True,
+                stream_options={
+                    "include_usage": True
+                }
             )
             
             content = ""
@@ -127,14 +130,7 @@ class TextImprover:
             improved_texts = json.loads(json_match.group(1))
             logger.debug(f"Received {len(improved_texts)} improved texts")
 
-            # Validate output count
-            if len(improved_texts) != len(batch):
-                logger.error(
-                    f"API returned wrong number of segments: {len(improved_texts)} instead of {len(batch)}"
-                )
-                return [seg["text"] for seg in batch]
-
-            return [text for _, text in improved_texts]
+            return improved_texts
 
         except Exception as e:
             logger.error(f"Error in _improve_batch: {str(e)}")
@@ -162,10 +158,10 @@ class TextImprover:
                 logger.info(f"Processing batch {i} of {len(batches)}")
                 try:
                     improved_texts = self._improve_batch(batch)
-                    for original_seg, improved_text in zip(batch, improved_texts):
+                    for [timeline, improved_text] in improved_texts:
                         improved_segments.append(
                             {
-                                "timeline": original_seg["timeline"],
+                                "timeline": timeline,
                                 "text": improved_text.strip(),
                             }
                         )
@@ -176,7 +172,6 @@ class TextImprover:
             os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
             with open(output_path, "w", encoding="utf-8") as f:
                 for i, segment in enumerate(improved_segments, 1):
-                    f.write(f"{i}\n")
                     f.write(f"{segment['timeline']}\n")
                     f.write(f"{segment['text']}\n\n")
 

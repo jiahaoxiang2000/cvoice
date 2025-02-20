@@ -4,9 +4,6 @@ import os
 from datetime import datetime, timezone
 from ..utils.logger import logger
 
-# Add version check and logging
-logger.info(f"Using Whisper version: {whisper.__version__}")
-
 
 class TextRecognizer:
     _model = None

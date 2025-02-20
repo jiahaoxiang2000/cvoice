@@ -68,50 +68,76 @@ class TextImprover:
 
     def _improve_batch(self, batch):
         try:
-            combined_text = "\n---\n".join(seg["text"] for seg in batch)
+            batch_data = [[seg["timeline"], seg["text"]] for seg in batch]
+            combined_text = json.dumps(batch_data, ensure_ascii=False)
             logger.debug(f"Improving batch with {len(batch)} segments")
-            logger.debug(f"Combined text length: {len(combined_text)}")
 
             messages = [
                 {
-                    "role": "user",
+                    "role": "system",
                     "content": (
-                        f"Convert exactly {len(batch)} subtitle sections separated by '---' into improved text. "
-                        "Output must contain exactly the same number of sections as input. "
-                        "Output should be in JSON format with an array of improved texts. "
-                        "Make them clear and natural while preserving meaning.\n\n"
-                        "EXAMPLE INPUT:\nText1\n---\nText2\n\n"
-                        '{"improved_texts": ["Improved Text1", "Improved Text2"]}\n\n'
-                        f"YOUR OUTPUT MUST CONTAIN EXACTLY {len(batch)} IMPROVED TEXTS."
+                        f"对视频字幕进行微调（更正术语，允许重复），格式为[时间轴, 文本]。"
+                        f"遵循以下规则：1. 调整后的字幕，在时间线上与原字幕对应。"
+                        f"2. 输出必须使用Markdown代码块，采用JSON格式的数组。"
+                        f"示例输出：```json\n[\"00:00:01 --> 00:00:05\", \"改进文本\"]```"
                     ),
                 },
                 {"role": "user", "content": combined_text},
             ]
 
-            response = self.client.chat.completions.create(
+            logger.debug(f"Sending message to DeepSeek: {messages}")
+            completion = self.client.chat.completions.create(
                 model="deepseek-r1",
                 messages=messages, # type: ignore
+                stream=True,
             )
+            
+            content = ""
+            reasoning_content = ""
+            is_answering = False
+            
+            for chunk in completion:
+                if not chunk.choices:
+                    logger.debug(f"Usage info received: {chunk.usage}")
+                    continue
+                    
+                delta = chunk.choices[0].delta
+                
+                # Track reasoning content
+                if hasattr(delta, 'reasoning_content') and delta.reasoning_content is not None:
+                    reasoning_content += delta.reasoning_content
+                
+                # Track answer content
+                if delta.content:
+                    if not is_answering:
+                        logger.debug("Starting to receive answer content")
+                        is_answering = True
+                    content += delta.content
 
-            logger.debug(f"API response: {response.choices[0].message.content}")
-            content = json.loads(response.choices[0].message.content) # type: ignore
-            logger.debug(f"improved texts: {content}")
+            logger.debug(f"Reasoning process: {reasoning_content}")
+            logger.debug(f"Final content: {content}")
 
-            improved_texts = content.get("improved_texts", [])
+            # Extract JSON from markdown code block
+            json_match = re.search(r'```json\s*(\[.*?\])\s*```', content, re.DOTALL)
+            
+            if not json_match:
+                logger.error("No JSON found in markdown response")
+                return [seg["text"] for seg in batch]
+                
+            improved_texts = json.loads(json_match.group(1))
+            logger.debug(f"Received {len(improved_texts)} improved texts")
 
-            # Strict validation of output count
+            # Validate output count
             if len(improved_texts) != len(batch):
                 logger.error(
                     f"API returned wrong number of segments: {len(improved_texts)} instead of {len(batch)}"
                 )
-                # Fall back to original texts if counts don't match
-                improved_texts = [seg["text"] for seg in batch]
+                return [seg["text"] for seg in batch]
 
-            return improved_texts
+            return [text for _, text in improved_texts]
 
         except Exception as e:
             logger.error(f"Error in _improve_batch: {str(e)}")
-            # Fall back to original texts on error
             return [seg["text"] for seg in batch]
 
     def improve_text(self, input_path, output_path):

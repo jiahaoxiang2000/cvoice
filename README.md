@@ -194,9 +194,6 @@ uv run pre-commit install
 # Run all tests
 uv run pytest
 
-# Run with coverage
-uv run pytest --cov=src
-
 # Run specific test file
 uv run pytest tests/test_core/test_pipeline.py
 ```

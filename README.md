@@ -224,13 +224,6 @@ uv run mypy src/
 4. **TextToSpeech**: Synthesizes speech with voice cloning
 5. **VideoMerger**: Merges synthesized audio back into video
 
-### Pipeline Flow
-
-```
-Video Input ’ Audio Extraction ’ Speech-to-Text ’ Text Improvement ’ 
-Text-to-Speech ’ Video Merging ’ Final Output
-```
-
 ## Contributing
 
 1. Fork the repository
